@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  yelb-ui:
+    image: mreferre/yelb-ui:0.5
+    ports:
+      - "8080:80"
+    depends_on:
+      - yelb-appserver
+    networks:
+      - yelb-networks
+
+  yelb-appserver:
+    image: mreferre/yelb-appserver:0.5
+    ports:
+      - "4567:4567"
+    depends_on:
+      - redis-server
+      - yelb-db
+    networks:
+      - yelb-networks
+
+  redis-server:
+    image: redis:4.0.2
+    container_name: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - yelb-networks
+
+  yelb-db:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5432:5432"
+    networks:
+      - yelb-networks
+
+  # Optional additional Redis nodes
+  odilia-redis01:
+    image: redis:4.0.2
+    networks:
+      - yelb-networks
+
+  odilia-redis02:
+    image: redis:4.0.2
+    networks:
+      - yelb-networks
+
+  # Redis Sentinels
+  odilia-redis-sentinel01:
+    image: bitnami/redis-sentinel:latest
+    environment:
+      - REDIS_MASTER_HOST=redis-server
+    networks:
+      - yelb-networks
+
+  odilia-redis-sentinel02:
+    image: bitnami/redis-sentinel:latest
+    environment:
+      - REDIS_MASTER_HOST=redis-server
+    networks:
+      - yelb-networks
+
+  odilia-redis-sentinel03:
+    image: bitnami/redis-sentinel:latest
+    environment:
+      - REDIS_MASTER_HOST=redis-server
+    networks:
+      - yelb-networks
+
+  # Optional DB Replicas
+  odilia-db-replication01:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: replica
+      POSTGRES_PASSWORD: replicapass
+    ports:
+      - "5433:5432"
+    networks:
+      - yelb-networks
+
+  odilia-db-replication02:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: replica
+      POSTGRES_PASSWORD: replicapass
+    ports:
+      - "5434:5432"
+    networks:
+      - yelb-networks
+
+  odilia-db-replication03:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: replica
+      POSTGRES_PASSWORD: replicapass
+    ports:
+      - "5435:5432"
+    networks:
+      - yelb-networks
+
+volumes:
+  redis-data:
+
+networks:
+  yelb-networks:
+    driver: bridge
+
